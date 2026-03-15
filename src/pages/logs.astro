@@ -1,0 +1,113 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Sidebar from '../components/Sidebar.astro';
+
+const logs = [
+  { ts:'2026-03-15 20:51:34', user:'user@yamada-lab.co.jp',       nas:'203.0.113.50', client:'ap01',     method:'EAP-TLS', ok:true },
+  { ts:'2026-03-15 20:50:21', user:'device@partner.example.com',  nas:'198.51.100.10',client:'proxy01',  method:'EAP-TLS', ok:true },
+  { ts:'2026-03-15 20:49:08', user:'unknown@guest.net',           nas:'10.0.0.99',    client:'ap-lobby', method:'EAP-TTLS',ok:false, reason:'証明書失効' },
+  { ts:'2026-03-15 20:48:55', user:'bob@yamada-lab.co.jp',        nas:'203.0.113.51', client:'ap02',     method:'EAP-TLS', ok:true },
+  { ts:'2026-03-15 20:48:33', user:'alice@yamada-lab.co.jp',      nas:'203.0.113.52', client:'ap03',     method:'EAP-TTLS',ok:true },
+  { ts:'2026-03-15 20:47:12', user:'baduser@external.org',        nas:'192.0.2.15',   client:'ap-floor3',method:'PEAP',    ok:false, reason:'認証失敗' },
+  { ts:'2026-03-15 20:46:55', user:'carol@yamada-lab.co.jp',      nas:'203.0.113.50', client:'ap01',     method:'EAP-TLS', ok:true },
+];
+---
+
+<Layout title="ログ - YAMADA LAB ANP Portal">
+  <div class="flex min-h-screen">
+    <Sidebar current="logs" />
+    <div class="flex-1 p-7 overflow-x-hidden">
+
+      <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <div>
+          <h1 class="text-xl font-bold text-white">認証ログ</h1>
+          <p class="text-xs text-slate-500 mt-0.5">リアルタイム参照・フィルタ・ダウンロード</p>
+        </div>
+        <div class="flex gap-2 flex-wrap">
+          <button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0f1a30]/70 border border-[#1a2540] text-slate-500 text-xs hover:text-slate-300 transition-all">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+            CSV
+          </button>
+          <button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0f1a30]/70 border border-[#1a2540] text-slate-500 text-xs hover:text-slate-300 transition-all">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+            JSON
+          </button>
+          <button id="live-btn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            ライブ
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="bg-[#0d1627]/60 border border-[#1a2540] rounded-xl p-3 mb-4 flex gap-2 flex-wrap items-center">
+        <input
+          type="text"
+          placeholder="ユーザ名・MAC・NAS-IP で検索…"
+          class="flex-1 min-w-[180px] px-3 py-2 rounded-lg bg-[#0f1a30]/80 border border-[#1a2540] text-white text-xs placeholder-slate-600 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all"
+        />
+        <select class="px-3 py-2 rounded-lg bg-[#0f1a30]/80 border border-[#1a2540] text-slate-400 text-xs outline-none">
+          <option>全結果</option><option>成功のみ</option><option>失敗のみ</option>
+        </select>
+        <select class="px-3 py-2 rounded-lg bg-[#0f1a30]/80 border border-[#1a2540] text-slate-400 text-xs outline-none">
+          <option>全サーバ</option><option>radius01</option><option>radius02</option><option>radius-dr</option>
+        </select>
+        <input type="date" value="2026-03-15" class="px-3 py-2 rounded-lg bg-[#0f1a30]/80 border border-[#1a2540] text-slate-400 text-xs outline-none" />
+      </div>
+
+      <!-- Log table -->
+      <div class="bg-[#0d1627]/60 border border-[#1a2540] rounded-2xl overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-[#1a2540] bg-[#080e1c]/40">
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-5">タイムスタンプ</th>
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-4">ユーザID</th>
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-4">NAS-IP</th>
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-4">クライアント</th>
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-4">認証方式</th>
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-4">結果</th>
+                <th class="text-right text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-5">詳細</th>
+              </tr>
+            </thead>
+            <tbody>
+              {logs.map(l => (
+                <tr class={`border-b border-[#1a2540]/50 hover:bg-[#0f1a30]/30 transition-colors ${!l.ok ? 'bg-red-500/[0.02]' : ''}`}>
+                  <td class="py-3 px-5 font-mono text-[11px] text-slate-500 whitespace-nowrap">{l.ts}</td>
+                  <td class={`py-3 px-4 font-mono text-xs ${l.ok ? 'text-slate-300' : 'text-red-400'}`}>{l.user}</td>
+                  <td class="py-3 px-4 font-mono text-xs text-slate-500">{l.nas}</td>
+                  <td class="py-3 px-4 font-mono text-xs text-slate-400">{l.client}</td>
+                  <td class="py-3 px-4">
+                    <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20">{l.method}</span>
+                  </td>
+                  <td class="py-3 px-4">
+                    {l.ok
+                      ? <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">成功</span>
+                      : <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] bg-red-500/10 text-red-400 border border-red-500/20">
+                          失敗{l.reason && <span class="text-[9px] text-red-500"> — {l.reason}</span>}
+                        </span>
+                    }
+                  </td>
+                  <td class="py-3 px-5 text-right">
+                    <button class={`px-3 py-1 rounded-lg text-[11px] border ${l.ok ? 'bg-[#0f1a30]/70 border-[#1a2540] text-slate-500 hover:text-slate-300' : 'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20'} transition-all`}>
+                      詳細
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div class="flex items-center justify-between px-5 py-3 border-t border-[#1a2540]">
+          <span class="text-xs text-slate-500">24,831件中 1–50件を表示</span>
+          <div class="flex gap-1">
+            <button class="px-3 py-1.5 rounded-lg text-xs text-slate-500 bg-[#0f1a30]/70 border border-[#1a2540] cursor-not-allowed opacity-40" disabled>前へ</button>
+            <button class="px-3 py-1.5 rounded-lg text-xs bg-blue-500/20 text-blue-400 border-none cursor-pointer">1</button>
+            <button class="px-3 py-1.5 rounded-lg text-xs text-slate-500 bg-[#0f1a30]/70 border border-[#1a2540] cursor-pointer hover:bg-[#0f1a30]">2</button>
+            <button class="px-3 py-1.5 rounded-lg text-xs text-slate-500 bg-[#0f1a30]/70 border border-[#1a2540] cursor-pointer hover:bg-[#0f1a30]">次へ</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

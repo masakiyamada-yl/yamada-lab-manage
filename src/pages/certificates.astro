@@ -1,158 +1,114 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
+import Sidebar from '../components/Sidebar.astro';
+
+const certs = [
+  { cn:'ap01.yamada-lab.co.jp',    serial:'A1B2C3D4', key:'RSA 4096',     issued:'2026-03-01', expires:'2028-03-01', days:717,  status:'valid' },
+  { cn:'ap02.yamada-lab.co.jp',    serial:'B3C4D5E6', key:'ECDSA P-384',  issued:'2026-03-01', expires:'2028-03-01', days:717,  status:'valid' },
+  { cn:'ap-floor3.yamada-lab.co.jp',serial:'E5F6A7B8',key:'RSA 4096',     issued:'2025-03-22', expires:'2026-04-22', days:38,   status:'warn' },
+  { cn:'proxy01.yamada-lab.co.jp', serial:'F6E5D4C3', key:'ECDSA P-384',  issued:'2025-04-15', expires:'2026-04-15', days:31,   status:'warn' },
+  { cn:'ap-lobby.yamada-lab.co.jp',serial:'E5F6A7B9', key:'RSA 2048',     issued:'2025-03-07', expires:'2026-04-07', days:23,   status:'urgent' },
+  { cn:'ap00.yamada-lab.co.jp',    serial:'0A1B2C3D', key:'RSA 2048',     issued:'2024-01-10', expires:'2025-01-10', days:null, status:'revoked' },
+];
 ---
 
-<Layout title="証明書一覧 - YAMADA LAB Certificate Portal">
-  <Header slot="header" isAuthenticated={true} />
-  <Footer slot="footer" />
+<Layout title="証明書管理 - YAMADA LAB ANP Portal">
+  <div class="flex min-h-screen">
+    <Sidebar current="certificates" />
+    <div class="flex-1 p-7 overflow-x-hidden">
 
-  <div class="min-h-screen pt-24 pb-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-6xl mx-auto">
-
-      <!-- Page Header -->
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 class="text-2xl font-bold text-white">証明書一覧</h1>
-          <p class="text-sm text-slate-400 mt-1">発行済みRadSecクライアント証明書の管理</p>
+          <h1 class="text-xl font-bold text-white">RadSec 証明書管理</h1>
+          <p class="text-xs text-slate-500 mt-0.5">発行・失効・有効期限の一元管理</p>
         </div>
-        <a
-          href="/issue"
-          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 text-white text-sm font-medium hover:from-brand-400 hover:to-brand-500 transition-all shadow-lg shadow-brand-500/25"
-        >
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-          新規発行
-        </a>
+        <button class="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-700 text-white text-sm font-semibold shadow-lg shadow-blue-500/20">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+          新規証明書を発行
+        </button>
       </div>
 
-      <!-- Filter Bar -->
-      <div class="bg-slate-900/60 backdrop-blur border border-slate-800/60 rounded-xl p-4 mb-4">
-        <div class="flex flex-col sm:flex-row gap-3">
-          <div class="flex-1">
-            <input
-              id="search-input"
-              type="text"
-              placeholder="CN、シリアル番号で検索..."
-              class="w-full px-4 py-2.5 rounded-lg bg-slate-800/60 border border-slate-700/60 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 transition-all"
-            />
+      <!-- Stats -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+        {[
+          { label:'有効',               value:'21', color:'emerald' },
+          { label:'30日以内に期限切れ', value:'3',  color:'amber' },
+          { label:'期限切れ',           value:'1',  color:'red' },
+          { label:'失効済み',           value:'2',  color:'slate' },
+        ].map(s => (
+          <div class="bg-[#0d1627]/60 border border-[#1a2540] rounded-2xl p-5">
+            <div class="text-[11px] text-slate-500 mb-2">{s.label}</div>
+            <div class={`text-3xl font-extrabold text-${s.color}-400`}>{s.value}</div>
           </div>
-          <select
-            id="status-filter"
-            class="px-4 py-2.5 rounded-lg bg-slate-800/60 border border-slate-700/60 text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 transition-all appearance-none"
-          >
-            <option value="all">すべてのステータス</option>
-            <option value="active">有効</option>
-            <option value="expiring">期限切れ間近</option>
-            <option value="expired">期限切れ</option>
-            <option value="revoked">失効済み</option>
-          </select>
-        </div>
+        ))}
       </div>
 
-      <!-- Certificate Table -->
-      <div class="bg-slate-900/60 backdrop-blur border border-slate-800/60 rounded-xl overflow-hidden">
+      <!-- Table -->
+      <div class="bg-[#0d1627]/60 border border-[#1a2540] rounded-2xl overflow-hidden">
+        <div class="px-5 py-3 border-b border-[#1a2540] flex gap-2 flex-wrap items-center">
+          <input placeholder="CN・シリアルで検索…" class="flex-1 min-w-[160px] px-3 py-2 rounded-lg bg-[#0f1a30]/80 border border-[#1a2540] text-white text-xs placeholder-slate-600 outline-none focus:border-blue-500/50 transition-all" />
+          <select class="px-3 py-2 rounded-lg bg-[#0f1a30]/80 border border-[#1a2540] text-slate-400 text-xs outline-none">
+            <option>全ステータス</option><option>有効</option><option>期限切れ間近</option><option>失効済み</option>
+          </select>
+          <button class="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#0f1a30]/70 border border-[#1a2540] text-slate-500 text-xs hover:text-slate-300 transition-all">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+            CA証明書DL
+          </button>
+        </div>
         <div class="overflow-x-auto">
-          <table class="w-full text-sm">
+          <table class="w-full">
             <thead>
-              <tr class="border-b border-slate-800/60 bg-slate-900/40">
-                <th class="text-left text-xs font-medium text-slate-500 uppercase tracking-wider py-3 px-4">Common Name</th>
-                <th class="text-left text-xs font-medium text-slate-500 uppercase tracking-wider py-3 px-4">シリアル番号</th>
-                <th class="text-left text-xs font-medium text-slate-500 uppercase tracking-wider py-3 px-4">発行日</th>
-                <th class="text-left text-xs font-medium text-slate-500 uppercase tracking-wider py-3 px-4">有効期限</th>
-                <th class="text-left text-xs font-medium text-slate-500 uppercase tracking-wider py-3 px-4">状態</th>
-                <th class="text-right text-xs font-medium text-slate-500 uppercase tracking-wider py-3 px-4">操作</th>
+              <tr class="border-b border-[#1a2540] bg-[#080e1c]/40">
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-5">Common Name</th>
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-4">シリアル</th>
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-4">鍵種別</th>
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-4">発行日</th>
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-4">有効期限</th>
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-4">残日数</th>
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-4">状態</th>
+                <th class="text-right text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-5">操作</th>
               </tr>
             </thead>
-            <tbody id="cert-table-body">
-              <!-- Sample rows for layout demonstration -->
-              <tr class="border-b border-slate-800/30 hover:bg-slate-800/20 transition-colors">
-                <td class="py-3.5 px-4">
-                  <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
-                    <span class="font-mono text-white">ap01.yamada-lab.co.jp</span>
-                  </div>
-                </td>
-                <td class="py-3.5 px-4 font-mono text-slate-400 text-xs">A1B2C3D4E5F6</td>
-                <td class="py-3.5 px-4 text-slate-400">2026-03-01</td>
-                <td class="py-3.5 px-4 text-slate-400">2028-03-01</td>
-                <td class="py-3.5 px-4">
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    有効
-                  </span>
-                </td>
-                <td class="py-3.5 px-4 text-right">
-                  <div class="flex items-center justify-end gap-2">
-                    <button class="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-all" title="詳細">
-                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                    </button>
-                    <button class="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-all" title="ダウンロード">
-                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                      </svg>
-                    </button>
-                    <button class="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all" title="失効">
-                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                      </svg>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-
-              <tr class="border-b border-slate-800/30 hover:bg-slate-800/20 transition-colors">
-                <td class="py-3.5 px-4">
-                  <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full bg-amber-400"></div>
-                    <span class="font-mono text-white">proxy01.yamada-lab.co.jp</span>
-                  </div>
-                </td>
-                <td class="py-3.5 px-4 font-mono text-slate-400 text-xs">F6E5D4C3B2A1</td>
-                <td class="py-3.5 px-4 text-slate-400">2025-04-15</td>
-                <td class="py-3.5 px-4 text-amber-400">2026-04-15</td>
-                <td class="py-3.5 px-4">
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                    期限切れ間近
-                  </span>
-                </td>
-                <td class="py-3.5 px-4 text-right">
-                  <div class="flex items-center justify-end gap-2">
-                    <button class="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-all" title="詳細">
-                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                    </button>
-                    <button class="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-all" title="ダウンロード">
-                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                      </svg>
-                    </button>
-                    <button class="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all" title="失効">
-                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                      </svg>
-                    </button>
-                  </div>
-                </td>
-              </tr>
+            <tbody>
+              {certs.map(c => (
+                <tr class={`border-b border-[#1a2540]/50 hover:bg-[#0f1a30]/30 transition-colors`}>
+                  <td class={`py-3 px-5 font-mono text-xs ${c.status === 'revoked' ? 'text-slate-500' : c.status === 'urgent' ? 'text-red-400' : c.status === 'warn' ? 'text-amber-400' : 'text-slate-200'}`}>{c.cn}</td>
+                  <td class="py-3 px-4 font-mono text-[11px] text-slate-500">{c.serial}</td>
+                  <td class="py-3 px-4"><span class="inline-flex px-2 py-0.5 rounded-full text-[10px] bg-slate-500/10 text-slate-400 border border-slate-500/20">{c.key}</span></td>
+                  <td class={`py-3 px-4 text-xs ${c.status === 'revoked' ? 'text-slate-600' : 'text-slate-400'}`}>{c.issued}</td>
+                  <td class={`py-3 px-4 text-xs ${c.status === 'urgent' ? 'text-red-400' : c.status === 'warn' ? 'text-amber-400' : c.status === 'revoked' ? 'text-slate-600' : 'text-slate-400'}`}>{c.expires}</td>
+                  <td class="py-3 px-4">
+                    {c.days !== null
+                      ? <span class={`text-sm font-semibold ${c.status === 'urgent' ? 'text-red-400' : c.status === 'warn' ? 'text-amber-400' : 'text-emerald-400'}`}>{c.days}日</span>
+                      : <span class="text-slate-600 text-sm">—</span>
+                    }
+                  </td>
+                  <td class="py-3 px-4">
+                    {c.status === 'valid'   && <span class="inline-flex px-2.5 py-0.5 rounded-full text-[11px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">有効</span>}
+                    {c.status === 'warn'    && <span class="inline-flex px-2.5 py-0.5 rounded-full text-[11px] bg-amber-500/10 text-amber-400 border border-amber-500/20">期限切れ間近</span>}
+                    {c.status === 'urgent'  && <span class="inline-flex px-2.5 py-0.5 rounded-full text-[11px] bg-red-500/10 text-red-400 border border-red-500/20">⚠ 要対応</span>}
+                    {c.status === 'revoked' && <span class="inline-flex px-2.5 py-0.5 rounded-full text-[11px] bg-slate-500/10 text-slate-500 border border-slate-500/20">失効済み</span>}
+                  </td>
+                  <td class="py-3 px-5 text-right">
+                    <div class="flex items-center justify-end gap-2">
+                      {c.status !== 'revoked' && (
+                        <button class="px-2.5 py-1 rounded-lg text-[11px] bg-[#0f1a30]/70 border border-[#1a2540] text-slate-500 hover:text-slate-300 transition-all">DL</button>
+                      )}
+                      {(c.status === 'warn' || c.status === 'urgent') && (
+                        <button class="px-2.5 py-1 rounded-lg text-[11px] bg-gradient-to-r from-blue-500 to-blue-700 text-white border-none cursor-pointer">更新</button>
+                      )}
+                      {c.status === 'valid' && (
+                        <button class="px-2.5 py-1 rounded-lg text-[11px] bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-all">失効</button>
+                      )}
+                      {c.status === 'revoked' && (
+                        <button class="px-2.5 py-1 rounded-lg text-[11px] bg-[#0f1a30]/70 border border-[#1a2540] text-slate-600 cursor-not-allowed opacity-50">詳細</button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
-        </div>
-
-        <!-- Pagination -->
-        <div class="flex items-center justify-between px-4 py-3 border-t border-slate-800/60">
-          <p class="text-xs text-slate-500">2件の証明書を表示</p>
-          <div class="flex items-center gap-1">
-            <button class="px-3 py-1.5 rounded-lg text-xs text-slate-500 hover:bg-slate-800 transition-all disabled:opacity-30" disabled>前へ</button>
-            <button class="px-3 py-1.5 rounded-lg text-xs bg-brand-500/20 text-brand-400">1</button>
-            <button class="px-3 py-1.5 rounded-lg text-xs text-slate-500 hover:bg-slate-800 transition-all disabled:opacity-30" disabled>次へ</button>
-          </div>
         </div>
       </div>
     </div>

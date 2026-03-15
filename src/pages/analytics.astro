@@ -1,0 +1,109 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Sidebar from '../components/Sidebar.astro';
+
+const clients = [
+  { cn:'ap01.yamada-lab.co.jp',   total:31420, success:31041, fail:379,  rate:98.8, trend:[1,1,1,0,1,1,1], topFail:'タイムアウト',  ok:true },
+  { cn:'proxy01.yamada-lab.co.jp',total:22810, success:22628, fail:182,  rate:99.2, trend:[1,1,1,0,1,1,1], topFail:'ユーザ不明',    ok:true },
+  { cn:'ap-lobby.yamada-lab.co.jp',total:8941, success:7893, fail:1048, rate:88.3, trend:[1,1,0,0,0,0,0], topFail:'証明書失効',    ok:false },
+  { cn:'ap02.yamada-lab.co.jp',   total:19205, success:18966, fail:239,  rate:98.8, trend:[1,1,1,1,1,1,0], topFail:'タイムアウト',  ok:true },
+  { cn:'ap03.yamada-lab.co.jp',   total:15244, success:15044, fail:200,  rate:98.7, trend:[1,1,1,1,1,0,1], topFail:'ユーザ不明',    ok:true },
+];
+---
+
+<Layout title="認証分析 - YAMADA LAB ANP Portal">
+  <div class="flex min-h-screen">
+    <Sidebar current="analytics" />
+    <div class="flex-1 p-7 overflow-x-hidden">
+
+      <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <div>
+          <h1 class="text-xl font-bold text-white">認証成功率 分析</h1>
+          <p class="text-xs text-slate-500 mt-0.5">全クライアント / RadSecクライアント別</p>
+        </div>
+        <div class="flex gap-2">
+          <select class="px-3 py-1.5 rounded-lg bg-[#0f1a30]/70 border border-[#1a2540] text-slate-400 text-xs outline-none">
+            <option>過去7日</option><option>過去30日</option><option>過去3か月</option>
+          </select>
+          <button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0f1a30]/70 border border-[#1a2540] text-slate-500 text-xs hover:text-slate-300 transition-all">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+            CSVエクスポート
+          </button>
+        </div>
+      </div>
+
+      <!-- Overview -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
+        <div class="bg-[#0d1627]/60 border border-[#1a2540] rounded-2xl p-5">
+          <div class="text-[11px] text-slate-500 mb-2">全体認証成功率（7日）</div>
+          <div class="text-4xl font-extrabold text-emerald-400">96.1%</div>
+          <div class="mt-3 h-1.5 rounded-full bg-[#0f1a30] overflow-hidden"><div class="h-full rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400" style="width:96.1%"></div></div>
+          <div class="flex justify-between text-[11px] text-slate-500 mt-2"><span>成功 168,203</span><span class="text-red-400">失敗 6,632</span></div>
+        </div>
+        <div class="bg-[#0d1627]/60 border border-[#1a2540] rounded-2xl p-5">
+          <div class="text-[11px] text-slate-500 mb-2">EAP-TLS成功率（RadSec）</div>
+          <div class="text-4xl font-extrabold text-blue-400">98.7%</div>
+          <div class="mt-3 h-1.5 rounded-full bg-[#0f1a30] overflow-hidden"><div class="h-full rounded-full bg-gradient-to-r from-blue-600 to-cyan-400" style="width:98.7%"></div></div>
+          <div class="flex justify-between text-[11px] text-slate-500 mt-2"><span>成功 82,109</span><span class="text-red-400">失敗 1,071</span></div>
+        </div>
+        <div class="bg-[#0d1627]/60 border border-[#1a2540] rounded-2xl p-5">
+          <div class="text-[11px] text-slate-500 mb-2">主な失敗原因 TOP1</div>
+          <div class="text-2xl font-bold text-amber-400 mt-2">証明書失効</div>
+          <div class="text-4xl font-extrabold text-amber-400">42%</div>
+          <div class="text-[11px] text-slate-500 mt-1">失敗 6,632件中 2,785件</div>
+        </div>
+      </div>
+
+      <!-- Per-client table -->
+      <div class="bg-[#0d1627]/60 border border-[#1a2540] rounded-2xl overflow-hidden">
+        <div class="px-5 py-4 border-b border-[#1a2540] flex items-center justify-between">
+          <span class="text-sm font-semibold text-white">RadSecクライアント別 成功率</span>
+          <span class="text-[11px] text-slate-500">過去7日間</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-[#1a2540] bg-[#080e1c]/40">
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-5">クライアントCN</th>
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-4">総認証数</th>
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-4">成功</th>
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-4">失敗</th>
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-4">成功率</th>
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-4">主な失敗原因</th>
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-4">7日トレンド</th>
+              </tr>
+            </thead>
+            <tbody>
+              {clients.map(c => (
+                <tr class="border-b border-[#1a2540]/50 hover:bg-[#0f1a30]/30 transition-colors">
+                  <td class={`py-3 px-5 font-mono text-xs ${c.ok ? 'text-slate-200' : 'text-amber-400'}`}>{c.cn}</td>
+                  <td class="py-3 px-4 text-slate-400 text-sm">{c.total.toLocaleString()}</td>
+                  <td class="py-3 px-4 text-emerald-400 text-sm">{c.success.toLocaleString()}</td>
+                  <td class="py-3 px-4 text-red-400 text-sm">{c.fail.toLocaleString()}</td>
+                  <td class="py-3 px-4">
+                    <div class="flex items-center gap-2">
+                      <div class="h-1.5 w-14 rounded-full bg-[#0f1a30] overflow-hidden">
+                        <div class={`h-full rounded-full ${c.ok ? 'bg-gradient-to-r from-blue-600 to-cyan-400' : 'bg-gradient-to-r from-amber-700 to-amber-400'}`} style={`width:${c.rate}%`}></div>
+                      </div>
+                      <span class={`text-xs font-semibold ${c.ok ? 'text-emerald-400' : 'text-amber-400'}`}>{c.rate}%</span>
+                    </div>
+                  </td>
+                  <td class="py-3 px-4">
+                    <span class={`inline-flex px-2 py-0.5 rounded-full text-[10px] ${c.ok ? 'bg-slate-500/10 text-slate-400 border border-slate-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>{c.topFail}</span>
+                  </td>
+                  <td class="py-3 px-4">
+                    <div class="flex items-end gap-0.5 h-6">
+                      {c.trend.map((v: number) => (
+                        <div class={`w-1.5 rounded-sm ${v ? 'bg-blue-500' : 'bg-[#1a2540]'}`} style="height:100%"></div>
+                      ))}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

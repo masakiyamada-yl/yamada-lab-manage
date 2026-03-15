@@ -1,0 +1,110 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Sidebar from '../components/Sidebar.astro';
+
+const servers = [
+  { host: 'radius01.yamada-lab.co.jp', ip: '203.0.113.10', role: 'プライマリ', roleColor: 'blue', ms: 8, today: 12441, uptime: 100 },
+  { host: 'radius02.yamada-lab.co.jp', ip: '203.0.113.11', role: 'セカンダリ', roleColor: 'blue', ms: 11, today: 9820, uptime: 99.9 },
+  { host: 'radius-dr.osakadc.jp',      ip: '198.51.100.5', role: 'DR/待機',   roleColor: 'gray', ms: 22, today: 2570, uptime: 99.8 },
+  { host: 'radsec-gw.yamada-lab.co.jp',ip: '203.0.113.20', role: 'RadSec GW', roleColor: 'violet', ms: 6, today: 24831, uptime: 100 },
+];
+---
+
+<Layout title="RADIUS ヘルス - YAMADA LAB ANP Portal">
+  <div class="flex min-h-screen">
+    <Sidebar current="radius" />
+    <div class="flex-1 p-7 overflow-x-hidden">
+
+      <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <div>
+          <h1 class="text-xl font-bold text-white">RADIUS サーバ正常性確認</h1>
+          <p class="text-xs text-slate-500 mt-0.5">最終チェック: 2026-03-15 20:52 JST — 60秒ごとに自動更新</p>
+        </div>
+        <button class="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-700 text-white text-sm font-semibold shadow-lg shadow-blue-500/20">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          今すぐ確認
+        </button>
+      </div>
+
+      <!-- Summary -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+        {[
+          { label:'オンライン', value:'4', color:'emerald', icon:'check' },
+          { label:'オフライン', value:'0', color:'slate',   icon:'x' },
+          { label:'平均レスポンス', value:'12ms', color:'blue', icon:'clock' },
+          { label:'今月稼働率', value:'99.98%', color:'violet', icon:'chart' },
+        ].map(s => (
+          <div class="bg-[#0d1627]/60 border border-[#1a2540] rounded-2xl p-5 flex items-center gap-4">
+            <div class={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 bg-${s.color}-500/10`}>
+              {s.icon === 'check' && <svg class={`w-5 h-5 text-${s.color}-400`} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>}
+              {s.icon === 'x' && <svg class={`w-5 h-5 text-${s.color}-400`} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>}
+              {s.icon === 'clock' && <svg class={`w-5 h-5 text-${s.color}-400`} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>}
+              {s.icon === 'chart' && <svg class={`w-5 h-5 text-${s.color}-400`} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>}
+            </div>
+            <div>
+              <div class={`text-2xl font-bold text-${s.color}-400`}>{s.value}</div>
+              <div class="text-[11px] text-slate-500 mt-0.5">{s.label}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <!-- Server table -->
+      <div class="bg-[#0d1627]/60 border border-[#1a2540] rounded-2xl overflow-hidden">
+        <div class="px-5 py-4 border-b border-[#1a2540] flex items-center justify-between">
+          <span class="text-sm font-semibold text-white">サーバ一覧</span>
+          <span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            全台正常稼働中
+          </span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-[#1a2540] bg-[#080e1c]/40">
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-5">ホスト名</th>
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-4">IPアドレス</th>
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-4">ロール</th>
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-4">レスポンス</th>
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-4">認証数(今日)</th>
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-4">稼働率(30日)</th>
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-4">ステータス</th>
+              </tr>
+            </thead>
+            <tbody>
+              {servers.map(s => (
+                <tr class="border-b border-[#1a2540]/50 hover:bg-[#0f1a30]/30 transition-colors">
+                  <td class="py-3.5 px-5 font-mono text-sm text-slate-200">{s.host}</td>
+                  <td class="py-3.5 px-4 font-mono text-xs text-slate-400">{s.ip}</td>
+                  <td class="py-3.5 px-4">
+                    <span class={`inline-flex px-2.5 py-0.5 rounded-full text-[11px] ${
+                      s.roleColor === 'blue' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                      : s.roleColor === 'violet' ? 'bg-violet-500/10 text-violet-400 border border-violet-500/20'
+                      : 'bg-slate-500/10 text-slate-400 border border-slate-500/20'
+                    }`}>{s.role}</span>
+                  </td>
+                  <td class="py-3.5 px-4 font-semibold text-emerald-400 text-sm">{s.ms}ms</td>
+                  <td class="py-3.5 px-4 text-slate-400 text-sm">{s.today.toLocaleString()}</td>
+                  <td class="py-3.5 px-4">
+                    <div class="flex items-center gap-2">
+                      <div class="h-1.5 w-20 rounded-full bg-[#0f1a30] overflow-hidden">
+                        <div class="h-full rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400" style={`width:${s.uptime}%`}></div>
+                      </div>
+                      <span class="text-[11px] text-emerald-400">{s.uptime}%</span>
+                    </div>
+                  </td>
+                  <td class="py-3.5 px-4">
+                    <div class="flex items-center gap-1.5">
+                      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                      <span class="inline-flex px-2.5 py-0.5 rounded-full text-[11px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">正常</span>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

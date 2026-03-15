@@ -1,12 +1,12 @@
 ---
 export interface Props {
-  title: string;
+  title?: string;
   description?: string;
 }
 
 const {
-  title,
-  description = 'OpenRoaming RadSec証明書管理ポータル - 山田ラボ合同会社',
+  title = 'YAMADA LAB – OpenRoaming ANP Portal',
+  description = 'OpenRoaming ANP管理者向けポータル。RadSec証明書発行・RADIUS監視・認証分析・ログ管理。',
 } = Astro.props;
 ---
 
@@ -20,15 +20,15 @@ const {
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   </head>
-  <body class="min-h-screen bg-slate-950 text-white font-sans antialiased">
+  <body class="min-h-screen bg-[#080e1c] text-slate-200 font-sans antialiased">
     <a
       href="#main-content"
-      class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-brand-600 focus:text-white focus:rounded-lg"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded-lg"
     >
       メインコンテンツへスキップ
     </a>
