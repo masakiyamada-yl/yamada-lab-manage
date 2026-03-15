@@ -1,0 +1,308 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Layout title="証明書発行 - YAMADA LAB Certificate Portal">
+  <Header slot="header" isAuthenticated={true} />
+  <Footer slot="footer" />
+
+  <div class="min-h-screen pt-24 pb-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-2xl mx-auto">
+
+      <!-- Breadcrumb -->
+      <nav class="mb-6 text-sm" aria-label="パンくずリスト">
+        <ol class="flex items-center gap-2 text-slate-500">
+          <li><a href="/dashboard" class="hover:text-slate-300 transition-colors">ダッシュボード</a></li>
+          <li>/</li>
+          <li class="text-white">新規証明書発行</li>
+        </ol>
+      </nav>
+
+      <!-- Form Card -->
+      <div class="bg-slate-900/60 backdrop-blur border border-slate-800/60 rounded-2xl p-6 sm:p-8">
+        <div class="mb-6">
+          <h1 class="text-xl font-bold text-white">RadSec クライアント証明書の発行</h1>
+          <p class="text-sm text-slate-400 mt-1">OpenRoaming対応のRadSecクライアント証明書を生成します</p>
+        </div>
+
+        <form id="issue-form" class="space-y-6">
+          <!-- Common Name -->
+          <div>
+            <label for="cn" class="block text-sm font-medium text-slate-300 mb-2">
+              Common Name (CN) <span class="text-red-400">*</span>
+            </label>
+            <input
+              id="cn"
+              type="text"
+              required
+              placeholder="例: client01.yamada-lab.co.jp"
+              class="w-full px-4 py-3 rounded-xl bg-slate-800/60 border border-slate-700/60 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-all"
+            />
+            <p class="text-xs text-slate-500 mt-1">RadSecクライアントの識別名（FQDN推奨）</p>
+          </div>
+
+          <!-- Organization -->
+          <div>
+            <label for="org" class="block text-sm font-medium text-slate-300 mb-2">
+              Organization (O)
+            </label>
+            <input
+              id="org"
+              type="text"
+              placeholder="例: Yamada Lab LLC"
+              value="Yamada Lab LLC"
+              class="w-full px-4 py-3 rounded-xl bg-slate-800/60 border border-slate-700/60 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-all"
+            />
+          </div>
+
+          <!-- Organizational Unit -->
+          <div>
+            <label for="ou" class="block text-sm font-medium text-slate-300 mb-2">
+              Organizational Unit (OU)
+            </label>
+            <input
+              id="ou"
+              type="text"
+              placeholder="例: Network Division"
+              class="w-full px-4 py-3 rounded-xl bg-slate-800/60 border border-slate-700/60 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-all"
+            />
+          </div>
+
+          <!-- Validity -->
+          <div>
+            <label for="validity" class="block text-sm font-medium text-slate-300 mb-2">
+              有効期間 <span class="text-red-400">*</span>
+            </label>
+            <select
+              id="validity"
+              required
+              class="w-full px-4 py-3 rounded-xl bg-slate-800/60 border border-slate-700/60 text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-all appearance-none"
+            >
+              <option value="365">1年（365日）</option>
+              <option value="730" selected>2年（730日）</option>
+              <option value="1095">3年（1095日）</option>
+            </select>
+          </div>
+
+          <!-- Key Size -->
+          <div>
+            <label for="keysize" class="block text-sm font-medium text-slate-300 mb-2">
+              鍵長
+            </label>
+            <select
+              id="keysize"
+              class="w-full px-4 py-3 rounded-xl bg-slate-800/60 border border-slate-700/60 text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-all appearance-none"
+            >
+              <option value="2048">RSA 2048bit</option>
+              <option value="4096" selected>RSA 4096bit</option>
+              <option value="ec256">ECDSA P-256</option>
+              <option value="ec384">ECDSA P-384</option>
+            </select>
+          </div>
+
+          <!-- SAN -->
+          <div>
+            <label for="san" class="block text-sm font-medium text-slate-300 mb-2">
+              Subject Alternative Name (SAN)
+            </label>
+            <input
+              id="san"
+              type="text"
+              placeholder="例: DNS:client01.yamada-lab.co.jp"
+              class="w-full px-4 py-3 rounded-xl bg-slate-800/60 border border-slate-700/60 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-all"
+            />
+            <p class="text-xs text-slate-500 mt-1">カンマ区切りで複数指定可（DNS:, IP:）</p>
+          </div>
+
+          <!-- Output Format -->
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-3">
+              出力形式 <span class="text-red-400">*</span>
+            </label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label class="relative flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-800/40 border border-slate-700/40 cursor-pointer hover:bg-slate-800/60 transition-all has-[:checked]:border-brand-500/50 has-[:checked]:bg-brand-500/10">
+                <input type="radio" name="format" value="pem" class="sr-only peer" checked />
+                <div class="w-4 h-4 rounded-full border-2 border-slate-600 peer-checked:border-brand-500 peer-checked:bg-brand-500 transition-all flex items-center justify-center">
+                  <div class="w-1.5 h-1.5 rounded-full bg-white opacity-0 peer-checked:opacity-100"></div>
+                </div>
+                <div>
+                  <span class="text-sm font-medium text-white">PEM (.pem)</span>
+                  <p class="text-xs text-slate-500">cert + key 個別ファイル</p>
+                </div>
+              </label>
+              <label class="relative flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-800/40 border border-slate-700/40 cursor-pointer hover:bg-slate-800/60 transition-all has-[:checked]:border-brand-500/50 has-[:checked]:bg-brand-500/10">
+                <input type="radio" name="format" value="p12" class="sr-only peer" />
+                <div class="w-4 h-4 rounded-full border-2 border-slate-600 peer-checked:border-brand-500 peer-checked:bg-brand-500 transition-all flex items-center justify-center">
+                  <div class="w-1.5 h-1.5 rounded-full bg-white opacity-0 peer-checked:opacity-100"></div>
+                </div>
+                <div>
+                  <span class="text-sm font-medium text-white">PKCS#12 (.p12)</span>
+                  <p class="text-xs text-slate-500">秘密鍵込みバンドル</p>
+                </div>
+              </label>
+              <label class="relative flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-800/40 border border-slate-700/40 cursor-pointer hover:bg-slate-800/60 transition-all has-[:checked]:border-brand-500/50 has-[:checked]:bg-brand-500/10 sm:col-span-2">
+                <input type="radio" name="format" value="both" class="sr-only peer" />
+                <div class="w-4 h-4 rounded-full border-2 border-slate-600 peer-checked:border-brand-500 peer-checked:bg-brand-500 transition-all flex items-center justify-center">
+                  <div class="w-1.5 h-1.5 rounded-full bg-white opacity-0 peer-checked:opacity-100"></div>
+                </div>
+                <div>
+                  <span class="text-sm font-medium text-white">両方</span>
+                  <p class="text-xs text-slate-500">PEM + PKCS#12 をZIPでダウンロード</p>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- PKCS#12 Password (conditional) -->
+          <div id="p12-password-group" class="hidden">
+            <label for="p12pass" class="block text-sm font-medium text-slate-300 mb-2">
+              PKCS#12 パスワード <span class="text-red-400">*</span>
+            </label>
+            <div class="relative">
+              <input
+                id="p12pass"
+                type="password"
+                placeholder="PKCS#12ファイルの保護パスワード"
+                class="w-full px-4 py-3 pr-12 rounded-xl bg-slate-800/60 border border-slate-700/60 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-all"
+              />
+              <button
+                type="button"
+                id="toggle-pass"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                aria-label="パスワードを表示"
+              >
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Error -->
+          <div id="issue-error" class="hidden">
+            <div class="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+              <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+              </svg>
+              <span id="issue-error-msg"></span>
+            </div>
+          </div>
+
+          <!-- Submit -->
+          <div class="flex items-center gap-4 pt-2">
+            <button
+              type="submit"
+              class="flex-1 py-3 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 text-white font-medium text-sm hover:from-brand-400 hover:to-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50 transition-all shadow-lg shadow-brand-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              証明書を発行
+            </button>
+            <a
+              href="/dashboard"
+              class="px-6 py-3 rounded-xl border border-slate-700/60 text-slate-400 text-sm hover:bg-slate-800/60 hover:text-white transition-all"
+            >
+              キャンセル
+            </a>
+          </div>
+        </form>
+      </div>
+
+      <!-- Info Note -->
+      <div class="mt-6 flex items-start gap-3 px-5 py-4 rounded-xl bg-brand-500/5 border border-brand-500/10">
+        <svg class="w-5 h-5 text-brand-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+        </svg>
+        <div class="text-xs text-slate-400 leading-relaxed">
+          <p class="mb-1">発行された証明書はRadSecクライアント（RADIUSプロキシ、AP等）に設定してください。</p>
+          <p>秘密鍵は発行時のみダウンロード可能です。安全に保管してください。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  // Show/hide PKCS#12 password field
+  const formatRadios = document.querySelectorAll('input[name="format"]');
+  const p12Group = document.getElementById('p12-password-group');
+
+  formatRadios.forEach((radio) => {
+    radio.addEventListener('change', (e) => {
+      const val = (e.target as HTMLInputElement).value;
+      if (val === 'p12' || val === 'both') {
+        p12Group?.classList.remove('hidden');
+      } else {
+        p12Group?.classList.add('hidden');
+      }
+    });
+  });
+
+  // Toggle password visibility
+  const togglePass = document.getElementById('toggle-pass');
+  const p12PassInput = document.getElementById('p12pass') as HTMLInputElement;
+  togglePass?.addEventListener('click', () => {
+    p12PassInput.type = p12PassInput.type === 'password' ? 'text' : 'password';
+  });
+
+  // Form submission
+  const form = document.getElementById('issue-form') as HTMLFormElement;
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorDiv = document.getElementById('issue-error')!;
+    const errorMsg = document.getElementById('issue-error-msg')!;
+    errorDiv.classList.add('hidden');
+
+    const cn = (document.getElementById('cn') as HTMLInputElement).value.trim();
+    const format = (document.querySelector('input[name="format"]:checked') as HTMLInputElement)?.value;
+
+    if (!cn) {
+      errorDiv.classList.remove('hidden');
+      errorMsg.textContent = 'Common Name は必須です';
+      return;
+    }
+
+    const payload = {
+      cn,
+      org: (document.getElementById('org') as HTMLInputElement).value.trim(),
+      ou: (document.getElementById('ou') as HTMLInputElement).value.trim(),
+      validity: parseInt((document.getElementById('validity') as HTMLSelectElement).value),
+      keySize: (document.getElementById('keysize') as HTMLSelectElement).value,
+      san: (document.getElementById('san') as HTMLInputElement).value.trim(),
+      format,
+      p12Password: format !== 'pem' ? p12PassInput?.value : undefined,
+    };
+
+    try {
+      const res = await fetch('/api/certificates/issue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        // Trigger download
+        const blob = await res.blob();
+        const disposition = res.headers.get('Content-Disposition');
+        const filename = disposition?.match(/filename="?(.+?)"?$/)?.[1] || `${cn}.zip`;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        // Redirect to dashboard
+        setTimeout(() => (window.location.href = '/dashboard'), 1500);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        errorDiv.classList.remove('hidden');
+        errorMsg.textContent = data.message || '証明書の発行に失敗しました';
+      }
+    } catch {
+      errorDiv.classList.remove('hidden');
+      errorMsg.textContent = 'サーバーに接続できません';
+    }
+  });
+</script>

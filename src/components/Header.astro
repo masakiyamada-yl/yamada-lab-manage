@@ -1,0 +1,110 @@
+---
+export interface Props {
+  isAuthenticated?: boolean;
+}
+
+const { isAuthenticated = false } = Astro.props;
+---
+
+<header
+  id="site-header"
+  class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
+  role="banner"
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16">
+      <!-- Logo -->
+      <a href="/" class="flex items-center gap-3 group" aria-label="管理ポータル ホーム">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center">
+          <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+        </div>
+        <div>
+          <span class="text-sm font-semibold text-white group-hover:text-brand-300 transition-colors">
+            YAMADA LAB
+          </span>
+          <span class="hidden sm:inline text-xs text-slate-400 ml-2">Certificate Portal</span>
+        </div>
+      </a>
+
+      <!-- Desktop Nav -->
+      <nav class="hidden md:flex items-center gap-6" aria-label="メインナビゲーション">
+        {isAuthenticated ? (
+          <>
+            <a href="/dashboard" class="text-sm text-slate-300 hover:text-white transition-colors">ダッシュボード</a>
+            <a href="/certificates" class="text-sm text-slate-300 hover:text-white transition-colors">証明書一覧</a>
+            <a href="/issue" class="text-sm text-slate-300 hover:text-white transition-colors">新規発行</a>
+            <button
+              id="logout-btn"
+              class="text-sm px-4 py-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
+            >
+              ログアウト
+            </button>
+          </>
+        ) : (
+          <a
+            href="/auth"
+            class="text-sm px-5 py-2 rounded-lg bg-gradient-to-r from-brand-500 to-brand-600 text-white font-medium hover:from-brand-400 hover:to-brand-500 transition-all shadow-lg shadow-brand-500/25"
+          >
+            トークンで認証
+          </a>
+        )}
+      </nav>
+
+      <!-- Mobile Menu Toggle -->
+      <button
+        id="mobile-menu-btn"
+        class="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-all"
+        aria-label="メニューを開く"
+        aria-expanded="false"
+      >
+        <svg id="menu-open-icon" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+        <svg id="menu-close-icon" class="w-6 h-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Menu -->
+  <div id="mobile-menu" class="hidden md:hidden border-t border-slate-800/50 bg-slate-950/95 backdrop-blur-xl">
+    <nav class="max-w-7xl mx-auto px-4 py-4 flex flex-col gap-2" aria-label="モバイルナビゲーション">
+      {isAuthenticated ? (
+        <>
+          <a href="/dashboard" class="px-4 py-3 rounded-lg text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-all">ダッシュボード</a>
+          <a href="/certificates" class="px-4 py-3 rounded-lg text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-all">証明書一覧</a>
+          <a href="/issue" class="px-4 py-3 rounded-lg text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-all">新規発行</a>
+          <button class="px-4 py-3 rounded-lg text-sm text-left text-slate-300 hover:bg-slate-800 hover:text-white transition-all">ログアウト</button>
+        </>
+      ) : (
+        <a href="/auth" class="px-4 py-3 rounded-lg text-sm text-center bg-brand-600 text-white hover:bg-brand-500 transition-all">トークンで認証</a>
+      )}
+    </nav>
+  </div>
+</header>
+
+<script>
+  const header = document.getElementById('site-header');
+  const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+  const mobileMenu = document.getElementById('mobile-menu');
+  const openIcon = document.getElementById('menu-open-icon');
+  const closeIcon = document.getElementById('menu-close-icon');
+
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 20) {
+      header?.classList.add('bg-slate-950/90', 'backdrop-blur-xl', 'border-b', 'border-slate-800/50');
+    } else {
+      header?.classList.remove('bg-slate-950/90', 'backdrop-blur-xl', 'border-b', 'border-slate-800/50');
+    }
+  });
+
+  mobileMenuBtn?.addEventListener('click', () => {
+    const isOpen = mobileMenu?.classList.toggle('hidden') === false;
+    openIcon?.classList.toggle('hidden', isOpen);
+    closeIcon?.classList.toggle('hidden', !isOpen);
+    mobileMenuBtn.setAttribute('aria-expanded', String(isOpen));
+  });
+</script>

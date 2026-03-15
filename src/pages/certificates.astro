@@ -1,0 +1,160 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Layout title="証明書一覧 - YAMADA LAB Certificate Portal">
+  <Header slot="header" isAuthenticated={true} />
+  <Footer slot="footer" />
+
+  <div class="min-h-screen pt-24 pb-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-6xl mx-auto">
+
+      <!-- Page Header -->
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+          <h1 class="text-2xl font-bold text-white">証明書一覧</h1>
+          <p class="text-sm text-slate-400 mt-1">発行済みRadSecクライアント証明書の管理</p>
+        </div>
+        <a
+          href="/issue"
+          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 text-white text-sm font-medium hover:from-brand-400 hover:to-brand-500 transition-all shadow-lg shadow-brand-500/25"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          新規発行
+        </a>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="bg-slate-900/60 backdrop-blur border border-slate-800/60 rounded-xl p-4 mb-4">
+        <div class="flex flex-col sm:flex-row gap-3">
+          <div class="flex-1">
+            <input
+              id="search-input"
+              type="text"
+              placeholder="CN、シリアル番号で検索..."
+              class="w-full px-4 py-2.5 rounded-lg bg-slate-800/60 border border-slate-700/60 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 transition-all"
+            />
+          </div>
+          <select
+            id="status-filter"
+            class="px-4 py-2.5 rounded-lg bg-slate-800/60 border border-slate-700/60 text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 transition-all appearance-none"
+          >
+            <option value="all">すべてのステータス</option>
+            <option value="active">有効</option>
+            <option value="expiring">期限切れ間近</option>
+            <option value="expired">期限切れ</option>
+            <option value="revoked">失効済み</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Certificate Table -->
+      <div class="bg-slate-900/60 backdrop-blur border border-slate-800/60 rounded-xl overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-slate-800/60 bg-slate-900/40">
+                <th class="text-left text-xs font-medium text-slate-500 uppercase tracking-wider py-3 px-4">Common Name</th>
+                <th class="text-left text-xs font-medium text-slate-500 uppercase tracking-wider py-3 px-4">シリアル番号</th>
+                <th class="text-left text-xs font-medium text-slate-500 uppercase tracking-wider py-3 px-4">発行日</th>
+                <th class="text-left text-xs font-medium text-slate-500 uppercase tracking-wider py-3 px-4">有効期限</th>
+                <th class="text-left text-xs font-medium text-slate-500 uppercase tracking-wider py-3 px-4">状態</th>
+                <th class="text-right text-xs font-medium text-slate-500 uppercase tracking-wider py-3 px-4">操作</th>
+              </tr>
+            </thead>
+            <tbody id="cert-table-body">
+              <!-- Sample rows for layout demonstration -->
+              <tr class="border-b border-slate-800/30 hover:bg-slate-800/20 transition-colors">
+                <td class="py-3.5 px-4">
+                  <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
+                    <span class="font-mono text-white">ap01.yamada-lab.co.jp</span>
+                  </div>
+                </td>
+                <td class="py-3.5 px-4 font-mono text-slate-400 text-xs">A1B2C3D4E5F6</td>
+                <td class="py-3.5 px-4 text-slate-400">2026-03-01</td>
+                <td class="py-3.5 px-4 text-slate-400">2028-03-01</td>
+                <td class="py-3.5 px-4">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    有効
+                  </span>
+                </td>
+                <td class="py-3.5 px-4 text-right">
+                  <div class="flex items-center justify-end gap-2">
+                    <button class="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-all" title="詳細">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </button>
+                    <button class="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-all" title="ダウンロード">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                      </svg>
+                    </button>
+                    <button class="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all" title="失効">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr class="border-b border-slate-800/30 hover:bg-slate-800/20 transition-colors">
+                <td class="py-3.5 px-4">
+                  <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-amber-400"></div>
+                    <span class="font-mono text-white">proxy01.yamada-lab.co.jp</span>
+                  </div>
+                </td>
+                <td class="py-3.5 px-4 font-mono text-slate-400 text-xs">F6E5D4C3B2A1</td>
+                <td class="py-3.5 px-4 text-slate-400">2025-04-15</td>
+                <td class="py-3.5 px-4 text-amber-400">2026-04-15</td>
+                <td class="py-3.5 px-4">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                    期限切れ間近
+                  </span>
+                </td>
+                <td class="py-3.5 px-4 text-right">
+                  <div class="flex items-center justify-end gap-2">
+                    <button class="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-all" title="詳細">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </button>
+                    <button class="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-all" title="ダウンロード">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                      </svg>
+                    </button>
+                    <button class="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all" title="失効">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="flex items-center justify-between px-4 py-3 border-t border-slate-800/60">
+          <p class="text-xs text-slate-500">2件の証明書を表示</p>
+          <div class="flex items-center gap-1">
+            <button class="px-3 py-1.5 rounded-lg text-xs text-slate-500 hover:bg-slate-800 transition-all disabled:opacity-30" disabled>前へ</button>
+            <button class="px-3 py-1.5 rounded-lg text-xs bg-brand-500/20 text-brand-400">1</button>
+            <button class="px-3 py-1.5 rounded-lg text-xs text-slate-500 hover:bg-slate-800 transition-all disabled:opacity-30" disabled>次へ</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
