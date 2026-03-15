@@ -1,9 +1,4 @@
 ---
-import { getSession } from 'auth-astro/server';
-const session = await getSession(Astro.request);
-if (!session) {
-  return Astro.redirect('/login');
-}
 import Layout from '../layouts/Layout.astro';
 import Sidebar from '../components/Sidebar.astro';
 ---
