@@ -1,0 +1,196 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Sidebar from '../components/Sidebar.astro';
+
+const nasClients = [
+  { name: 'ap-lobby',   ip: '192.168.1.10', port: 1812, secret: 'S3cr3t!Lby', authType: 'EAP-TLS',   reqToday: 3841, acceptRate: 98.2, status: 'online' },
+  { name: 'ap-floor1',  ip: '192.168.1.11', port: 1812, secret: 'S3cr3t!F1',  authType: 'EAP-TTLS',  reqToday: 5012, acceptRate: 97.8, status: 'online' },
+  { name: 'ap-floor2',  ip: '192.168.1.12', port: 1812, secret: 'S3cr3t!F2',  authType: 'EAP-TTLS',  reqToday: 4329, acceptRate: 99.1, status: 'online' },
+  { name: 'ap-floor3',  ip: '192.168.1.13', port: 1812, secret: 'S3cr3t!F3',  authType: 'EAP-TLS',   reqToday: 2187, acceptRate: 97.5, status: 'online' },
+  { name: 'sw-core01',  ip: '192.168.2.1',  port: 1812, secret: 'N3tw0rk!C1', authType: 'PAP',        reqToday:  412, acceptRate: 100,  status: 'online' },
+  { name: 'vpn-gw',     ip: '203.0.113.30', port: 1812, secret: 'VpnGw#2026', authType: 'MS-CHAPv2',  reqToday: 2944, acceptRate: 95.3, status: 'online' },
+  { name: 'ap-roof',    ip: '192.168.1.20', port: 1812, secret: 'S3cr3t!Rf',  authType: 'EAP-TLS',   reqToday:    0, acceptRate:    0, status: 'offline' },
+];
+
+const ports = [
+  { num: 1812, label: 'RADIUS Auth',      proto: 'UDP', status: 'open', reqToday: 18725, avgMs: 9  },
+  { num: 1813, label: 'RADIUS Accounting',proto: 'UDP', status: 'open', reqToday: 18201, avgMs: 7  },
+  { num: 3799, label: 'CoA / DM',         proto: 'UDP', status: 'open', reqToday:    47, avgMs: 12 },
+];
+
+const packetStats = [
+  { label: 'Access-Request',   value: 18725, color: 'blue'    },
+  { label: 'Access-Accept',    value: 17841, color: 'emerald' },
+  { label: 'Access-Reject',    value:   621, color: 'red'     },
+  { label: 'Access-Challenge', value:   263, color: 'amber'   },
+];
+---
+
+<Layout title="RADIUS (UDP) - YAMADA LAB ANP Portal">
+  <div class="flex min-h-screen">
+    <Sidebar current="radius-udp" />
+    <div class="flex-1 p-7 overflow-x-hidden">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <div>
+          <h1 class="text-xl font-bold text-white">RADIUS (UDP)</h1>
+          <p class="text-xs text-slate-500 mt-0.5">最終チェック: 2026-03-16 09:00 JST — 60秒ごとに自動更新</p>
+        </div>
+        <button class="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-sm font-semibold shadow-lg shadow-blue-500/20">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          今すぐ確認
+        </button>
+      </div>
+
+      <!-- Port Status -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+        {ports.map(p => (
+          <div class="bg-[#0d1627]/60 border border-[#1a2540] rounded-2xl p-5 flex items-center gap-4">
+            <div class="w-11 h-11 rounded-xl bg-cyan-500/10 flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-0.5">
+                <span class="text-base font-bold text-white">{p.proto}/{p.num}</span>
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>OPEN
+                </span>
+              </div>
+              <div class="text-[11px] text-slate-500">{p.label}</div>
+              <div class="flex gap-3 mt-1.5 text-[11px]">
+                <span class="text-slate-400">本日 <span class="text-cyan-400">{p.reqToday.toLocaleString()}</span> req</span>
+                <span class="text-slate-400">avg <span class="text-cyan-400">{p.avgMs}ms</span></span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <!-- Packet Stats -->
+      <div class="bg-[#0d1627]/60 border border-[#1a2540] rounded-2xl p-5 mb-5">
+        <div class="text-sm font-semibold text-white mb-4">パケット統計（今日）</div>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {packetStats.map(s => (
+            <div class={`rounded-xl p-4 bg-${s.color}-500/5 border border-${s.color}-500/15`}>
+              <div class={`text-2xl font-extrabold text-${s.color}-400 leading-none`}>{s.value.toLocaleString()}</div>
+              <div class="text-[11px] text-slate-500 mt-1">{s.label}</div>
+              {s.label === 'Access-Accept' && (
+                <div class="text-[10px] text-emerald-400 mt-0.5">承認率 95.3%</div>
+              )}
+              {s.label === 'Access-Reject' && (
+                <div class="text-[10px] text-red-400 mt-0.5">拒否率 3.3%</div>
+              )}
+            </div>
+          ))}
+        </div>
+        <!-- Bar chart -->
+        <div class="mt-5 pt-4 border-t border-[#1a2540]">
+          <div class="text-[11px] text-slate-500 mb-2">時間帯別 Access-Request（過去12時間）</div>
+          <div class="flex items-end gap-1 h-14">
+            {[820,1240,1580,1820,1960,2100,2380,2490,2310,1970,1640,1410].map((v, i) => (
+              <div class="flex-1 flex flex-col items-center">
+                <div
+                  class={`w-full rounded-t ${i === 11 ? 'bg-gradient-to-t from-cyan-700 to-cyan-400' : 'bg-gradient-to-t from-blue-900 to-blue-600'}`}
+                  style={`height:${(v / 2490) * 100}%`}
+                ></div>
+              </div>
+            ))}
+          </div>
+          <div class="flex justify-between text-[9px] text-slate-600 mt-1">
+            <span>-12h</span><span>-9h</span><span>-6h</span><span>-3h</span><span>Now</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- NAS Client Table -->
+      <div class="bg-[#0d1627]/60 border border-[#1a2540] rounded-2xl overflow-hidden">
+        <div class="px-5 py-4 border-b border-[#1a2540] flex items-center justify-between">
+          <span class="text-sm font-semibold text-white">NASクライアント一覧</span>
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              6台オンライン
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs bg-slate-500/10 text-slate-400 border border-slate-500/20">
+              1台オフライン
+            </span>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-[#1a2540] bg-[#080e1c]/40">
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-5">NAS名</th>
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-4">IPアドレス</th>
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-4">認証方式</th>
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-4">シークレット</th>
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-4">認証数(今日)</th>
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-4">承認率</th>
+                <th class="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider py-3 px-4">ステータス</th>
+              </tr>
+            </thead>
+            <tbody>
+              {nasClients.map(c => (
+                <tr class="border-b border-[#1a2540]/50 hover:bg-[#0f1a30]/30 transition-colors">
+                  <td class="py-3.5 px-5 font-mono text-sm text-slate-200">{c.name}</td>
+                  <td class="py-3.5 px-4 font-mono text-xs text-slate-400">{c.ip}:{c.port}</td>
+                  <td class="py-3.5 px-4">
+                    <span class={`inline-flex px-2.5 py-0.5 rounded-full text-[11px] ${
+                      c.authType.startsWith('EAP') ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                      : c.authType === 'MS-CHAPv2' ? 'bg-violet-500/10 text-violet-400 border border-violet-500/20'
+                      : 'bg-slate-500/10 text-slate-400 border border-slate-500/20'
+                    }`}>{c.authType}</span>
+                  </td>
+                  <td class="py-3.5 px-4">
+                    <div class="flex items-center gap-2 group">
+                      <span class="font-mono text-xs text-slate-600 group-hover:text-slate-400 transition-colors" data-secret={c.secret}>
+                        {'•'.repeat(c.secret.length)}
+                      </span>
+                      <button
+                        class="opacity-0 group-hover:opacity-100 transition-opacity text-slate-500 hover:text-slate-300"
+                        title="クリップボードにコピー"
+                        onclick={`navigator.clipboard.writeText('${c.secret}')`}
+                      >
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                      </button>
+                    </div>
+                  </td>
+                  <td class="py-3.5 px-4 text-slate-400 text-sm">{c.reqToday.toLocaleString()}</td>
+                  <td class="py-3.5 px-4">
+                    {c.status === 'online' ? (
+                      <div class="flex items-center gap-2">
+                        <div class="h-1.5 w-16 rounded-full bg-[#0f1a30] overflow-hidden">
+                          <div
+                            class={`h-full rounded-full ${c.acceptRate >= 99 ? 'bg-gradient-to-r from-emerald-600 to-emerald-400' : c.acceptRate >= 96 ? 'bg-gradient-to-r from-blue-600 to-blue-400' : 'bg-gradient-to-r from-amber-600 to-amber-400'}`}
+                            style={`width:${c.acceptRate}%`}
+                          ></div>
+                        </div>
+                        <span class={`text-[11px] ${c.acceptRate >= 99 ? 'text-emerald-400' : c.acceptRate >= 96 ? 'text-blue-400' : 'text-amber-400'}`}>{c.acceptRate}%</span>
+                      </div>
+                    ) : (
+                      <span class="text-[11px] text-slate-600">—</span>
+                    )}
+                  </td>
+                  <td class="py-3.5 px-4">
+                    <div class="flex items-center gap-1.5">
+                      <span class={`w-2 h-2 rounded-full ${c.status === 'online' ? 'bg-emerald-400 animate-pulse' : 'bg-slate-600'}`}></span>
+                      <span class={`inline-flex px-2.5 py-0.5 rounded-full text-[11px] ${
+                        c.status === 'online'
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                          : 'bg-slate-500/10 text-slate-500 border border-slate-500/20'
+                      }`}>{c.status === 'online' ? '正常' : 'オフライン'}</span>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</Layout>
