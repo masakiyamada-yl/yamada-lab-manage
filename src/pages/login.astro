@@ -32,26 +32,37 @@ import Layout from '../layouts/Layout.astro';
       <!-- Card -->
       <div class="bg-[#0d1627]/70 backdrop-blur-xl border border-[#1a2540] rounded-2xl p-8 shadow-2xl">
         <h1 class="text-lg font-bold text-center text-white mb-2">管理者ログイン</h1>
-        <p class="text-xs text-slate-500 text-center mb-8">Google Workspace SSO でサインインしてください</p>
+        <p class="text-xs text-slate-500 text-center mb-8">
+          GitHub Enterprise SSO (yamada-lab-llc) でサインイン
+        </p>
 
         <!-- Error notice -->
         <div id="error-msg" class="hidden mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs text-center"></div>
 
-        <!-- SSO button -->
+        <!-- GitHub Enterprise SSO button -->
         <button
           id="sso-btn"
-          class="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-xl bg-white text-gray-800 font-semibold text-sm hover:bg-gray-50 active:scale-[0.98] transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-xl bg-[#24292f] text-white font-semibold text-sm hover:bg-[#2f363d] active:scale-[0.98] transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          <!-- GitHub mark -->
+          <svg width="20" height="20" viewBox="0 0 16 16" fill="white" aria-hidden="true">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
           </svg>
-          <span id="sso-label">Google Workspace でサインイン</span>
+          <span id="sso-label">GitHub Enterprise でサインイン</span>
         </button>
 
-        <p class="text-[11px] text-slate-600 text-center mt-6 leading-relaxed">
+        <!-- Enterprise info -->
+        <div class="mt-4 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-[#0f1a30]/50 border border-[#1a2540]">
+          <svg class="w-4 h-4 text-slate-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+          </svg>
+          <div>
+            <div class="text-[11px] text-slate-400 font-medium">yamada-lab-llc.ghe.com</div>
+            <div class="text-[10px] text-slate-600">Google Workspace SAML でSSO認証</div>
+          </div>
+        </div>
+
+        <p class="text-[11px] text-slate-600 text-center mt-5 leading-relaxed">
           アクセス権の付与は組織の管理者に<br/>お問い合わせください
         </p>
       </div>
@@ -59,27 +70,26 @@ import Layout from '../layouts/Layout.astro';
   </div>
 
   <script>
-    const IDP_SSO_URL   = 'https://accounts.google.com/o/saml2/idp?idpid=C04eaya5d';
-    const SP_ENTITY_ID  = 'https://manage.yamada-lab.co.jp';
-    const ACS_URL       = 'https://manage.yamada-lab.co.jp/auth/callback/';
+    const GITHUB_ENTERPRISE_HOST = 'https://yamada-lab-llc.ghe.com';
+    const GITHUB_CLIENT_ID       = 'REPLACE_WITH_OAUTH_APP_CLIENT_ID'; // ← OAuth App の Client ID
+    const CALLBACK_URL           = 'https://manage.yamada-lab.co.jp/auth/callback/';
 
     // ── Service worker registration ────────────────────────────────────────
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(console.error);
     }
 
-    // ── Error display ──────────────────────────────────────────────────────
+    // ── Error messages ─────────────────────────────────────────────────────
     const errorMsgs = {
-      auth_failed:        '認証に失敗しました。もう一度お試しください。',
-      wrong_issuer:       'IdP が一致しません。',
-      wrong_audience:     'SP Entity ID が一致しません。',
-      expired:            'SAMLレスポンスの有効期限が切れています。',
-      not_yet_valid:      'SAMLレスポンスがまだ有効期間前です。',
-      no_nameid:          'ユーザー情報を取得できませんでした。',
-      no_response:        'SAMLレスポンスが受信できませんでした。',
-      exception:          '予期しないエラーが発生しました。',
-      sw_unavailable:     'このブラウザはサポートされていません（Service Worker 必須）。',
+      no_code:              'GitHub から認証コードを受け取れませんでした。',
+      state_mismatch:       'セキュリティチェックに失敗しました。もう一度お試しください。',
+      token_exchange_failed:'トークン交換に失敗しました。',
+      user_fetch_failed:    'ユーザー情報の取得に失敗しました。',
+      not_org_member:       'この組織のメンバーではありません。管理者にお問い合わせください。',
+      exception:            '予期しないエラーが発生しました。',
+      sw_unavailable:       'このブラウザはサポートされていません（Service Worker が必要です）。',
     };
+
     const params = new URLSearchParams(window.location.search);
     const errKey = params.get('error');
     if (errKey) {
@@ -89,7 +99,7 @@ import Layout from '../layouts/Layout.astro';
     }
 
     // ── Already authenticated → redirect ──────────────────────────────────
-    async function checkExistingAuth() {
+    (async () => {
       try {
         const res  = await fetch('/auth/status');
         const data = await res.json();
@@ -97,10 +107,9 @@ import Layout from '../layouts/Layout.astro';
           window.location.replace(params.get('next') || '/dashboard/');
         }
       } catch {}
-    }
-    checkExistingAuth();
+    })();
 
-    // ── SSO initiation ─────────────────────────────────────────────────────
+    // ── GitHub Enterprise OAuth initiation ─────────────────────────────────
     document.getElementById('sso-btn').addEventListener('click', async () => {
       if (!('serviceWorker' in navigator)) {
         showError('sw_unavailable');
@@ -110,15 +119,27 @@ import Layout from '../layouts/Layout.astro';
       setBtnState('loading');
 
       try {
-        // Ensure SW is active before redirecting (so ACS POST is intercepted)
-        await navigator.serviceWorker.ready;
+        const sw = await navigator.serviceWorker.ready;
 
-        const { url, requestId } = await buildSSOUrl();
+        // Generate state for CSRF protection
+        const state = crypto.randomUUID();
 
-        // Store request ID in localStorage for potential future validation
-        sessionStorage.setItem('saml_req_id', requestId);
+        // Save state in SW's IndexedDB via message
+        await new Promise((resolve, reject) => {
+          const channel = new MessageChannel();
+          channel.port1.onmessage = e => (e.data?.ok ? resolve() : reject());
+          sw.active.postMessage({ type: 'SAVE_STATE', state }, [channel.port2]);
+          setTimeout(reject, 3000);
+        });
 
-        window.location.href = url;
+        // Build GitHub Enterprise OAuth URL
+        const authUrl = new URL(`${GITHUB_ENTERPRISE_HOST}/login/oauth/authorize`);
+        authUrl.searchParams.set('client_id',    GITHUB_CLIENT_ID);
+        authUrl.searchParams.set('redirect_uri',  CALLBACK_URL);
+        authUrl.searchParams.set('scope',         'read:org read:user user:email');
+        authUrl.searchParams.set('state',          state);
+
+        window.location.href = authUrl.toString();
 
       } catch (err) {
         console.error('SSO initiation failed:', err);
@@ -130,70 +151,14 @@ import Layout from '../layouts/Layout.astro';
     function setBtnState(state) {
       const btn   = document.getElementById('sso-btn');
       const label = document.getElementById('sso-label');
-      if (state === 'loading') {
-        btn.disabled   = true;
-        label.textContent = '接続中...';
-      } else {
-        btn.disabled   = false;
-        label.textContent = 'Google Workspace でサインイン';
-      }
+      btn.disabled      = state === 'loading';
+      label.textContent = state === 'loading' ? '接続中...' : 'GitHub Enterprise でサインイン';
     }
 
     function showError(key) {
       const el = document.getElementById('error-msg');
       el.textContent = errorMsgs[key] ?? `エラー: ${key}`;
       el.classList.remove('hidden');
-    }
-
-    // ── SAMLRequest builder ────────────────────────────────────────────────
-    async function buildSSOUrl() {
-      const requestId    = '_' + crypto.randomUUID().replace(/-/g, '');
-      const issueInstant = new Date().toISOString();
-
-      const xml = [
-        `<samlp:AuthnRequest`,
-        ` xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"`,
-        ` xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"`,
-        ` ID="${requestId}"`,
-        ` Version="2.0"`,
-        ` IssueInstant="${issueInstant}"`,
-        ` Destination="${IDP_SSO_URL}"`,
-        ` AssertionConsumerServiceURL="${ACS_URL}"`,
-        ` ProtocolBinding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST">`,
-        `<saml:Issuer>${SP_ENTITY_ID}</saml:Issuer>`,
-        `<samlp:NameIDPolicy`,
-        ` Format="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress"`,
-        ` AllowCreate="true"/>`,
-        `</samlp:AuthnRequest>`,
-      ].join('');
-
-      const samlRequest = await deflateBase64(xml);
-      const qs = new URLSearchParams({ SAMLRequest: samlRequest, RelayState: requestId });
-      return { url: `${IDP_SSO_URL}?${qs}`, requestId };
-    }
-
-    async function deflateBase64(str) {
-      const bytes  = new TextEncoder().encode(str);
-      const cs     = new CompressionStream('deflate-raw');
-      const writer = cs.writable.getWriter();
-      const reader = cs.readable.getReader();
-
-      writer.write(bytes);
-      writer.close();
-
-      const chunks = [];
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        chunks.push(value);
-      }
-      let total = 0;
-      chunks.forEach(c => total += c.length);
-      const out = new Uint8Array(total);
-      let off = 0;
-      chunks.forEach(c => { out.set(c, off); off += c.length; });
-
-      return btoa(String.fromCharCode(...out));
     }
   </script>
 </Layout>

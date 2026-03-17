@@ -1,7 +1,7 @@
 ---
-// ACS (Assertion Consumer Service) endpoint.
-// The Service Worker intercepts the POST from Google and redirects to /dashboard/.
-// This page renders only if the SW is not yet active (first visit edge case).
+// OAuth Callback page.
+// The Service Worker intercepts GET /auth/callback/?code=... and handles token exchange.
+// This page renders as a loading screen while the SW processes the request.
 import Layout from '../../layouts/Layout.astro';
 ---
 
@@ -10,12 +10,13 @@ import Layout from '../../layouts/Layout.astro';
     <div class="text-center">
       <div class="inline-block w-10 h-10 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mb-4"></div>
       <p class="text-slate-400 text-sm">認証処理中...</p>
+      <p class="text-slate-600 text-xs mt-1">GitHub Enterprise で認証しています</p>
     </div>
   </div>
 
   <script>
-    // If the SW was not active during the POST (first visit), check auth status
-    // and redirect accordingly.
+    // Fallback: if SW was not active when the redirect arrived,
+    // check auth status and redirect accordingly.
     (async () => {
       const params = new URLSearchParams(window.location.search);
       const err = params.get('error');
@@ -23,6 +24,11 @@ import Layout from '../../layouts/Layout.astro';
         window.location.replace('/login/?error=' + encodeURIComponent(err));
         return;
       }
+
+      // If SW intercepted the code, we should be redirected by now.
+      // Give it 1s then check session.
+      await new Promise(r => setTimeout(r, 1000));
+
       try {
         const res  = await fetch('/auth/status');
         const data = await res.json();
