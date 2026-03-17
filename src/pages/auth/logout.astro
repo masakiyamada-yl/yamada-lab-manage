@@ -1,0 +1,18 @@
+---
+// Logout: Service Worker clears the session and redirects to /login/.
+// This page is the navigation target; SW intercepts it at /auth/logout.
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="ログアウト - YAMADA LAB ANP Portal">
+  <div class="min-h-screen flex items-center justify-center">
+    <div class="text-center">
+      <div class="inline-block w-10 h-10 border-4 border-slate-500/30 border-t-slate-500 rounded-full animate-spin mb-4"></div>
+      <p class="text-slate-400 text-sm">ログアウト中...</p>
+    </div>
+  </div>
+  <script>
+    // Fallback if SW is not active
+    window.location.replace('/login/');
+  </script>
+</Layout>

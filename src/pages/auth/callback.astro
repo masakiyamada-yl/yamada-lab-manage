@@ -1,0 +1,35 @@
+---
+// ACS (Assertion Consumer Service) endpoint.
+// The Service Worker intercepts the POST from Google and redirects to /dashboard/.
+// This page renders only if the SW is not yet active (first visit edge case).
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="認証処理中 - YAMADA LAB ANP Portal">
+  <div class="min-h-screen flex items-center justify-center">
+    <div class="text-center">
+      <div class="inline-block w-10 h-10 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+      <p class="text-slate-400 text-sm">認証処理中...</p>
+    </div>
+  </div>
+
+  <script>
+    // If the SW was not active during the POST (first visit), check auth status
+    // and redirect accordingly.
+    (async () => {
+      const params = new URLSearchParams(window.location.search);
+      const err = params.get('error');
+      if (err) {
+        window.location.replace('/login/?error=' + encodeURIComponent(err));
+        return;
+      }
+      try {
+        const res  = await fetch('/auth/status');
+        const data = await res.json();
+        window.location.replace(data.authenticated ? '/dashboard/' : '/login/');
+      } catch {
+        window.location.replace('/login/');
+      }
+    })();
+  </script>
+</Layout>

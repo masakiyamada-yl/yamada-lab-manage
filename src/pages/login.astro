@@ -32,50 +32,24 @@ import Layout from '../layouts/Layout.astro';
       <!-- Card -->
       <div class="bg-[#0d1627]/70 backdrop-blur-xl border border-[#1a2540] rounded-2xl p-8 shadow-2xl">
         <h1 class="text-lg font-bold text-center text-white mb-2">管理者ログイン</h1>
-        <p class="text-xs text-slate-500 text-center mb-8">組織のSSOアカウントでサインインしてください</p>
+        <p class="text-xs text-slate-500 text-center mb-8">Google Workspace SSO でサインインしてください</p>
 
-        <!-- SSO buttons -->
-        <div class="space-y-3">
-          <a
-            href="/dashboard"
-            class="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-xl bg-white text-gray-800 font-semibold text-sm hover:bg-gray-50 transition-all shadow-sm"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-            </svg>
-            Google でサインイン
-          </a>
+        <!-- Error notice -->
+        <div id="error-msg" class="hidden mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs text-center"></div>
 
-          <a
-            href="/dashboard"
-            class="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-xl bg-[#0078d4] text-white font-semibold text-sm hover:bg-[#0067b8] transition-all"
-          >
-            <svg width="18" height="18" viewBox="0 0 23 23">
-              <path fill="#f35325" d="M1 1h10v10H1z"/><path fill="#81bc06" d="M12 1h10v10H12z"/>
-              <path fill="#05a6f0" d="M1 12h10v10H1z"/><path fill="#ffba08" d="M12 12h10v10H12z"/>
-            </svg>
-            Microsoft でサインイン
-          </a>
-
-          <div class="flex items-center gap-3 my-1">
-            <div class="flex-1 h-px bg-[#1a2540]"></div>
-            <span class="text-[11px] text-slate-600">または</span>
-            <div class="flex-1 h-px bg-[#1a2540]"></div>
-          </div>
-
-          <a
-            href="/dashboard"
-            class="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-xl bg-[#0f1a30]/70 border border-[#1a2540] text-slate-400 text-sm font-medium hover:bg-[#0f1a30] hover:text-slate-300 transition-all"
-          >
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-            </svg>
-            SAML SSO でサインイン
-          </a>
-        </div>
+        <!-- SSO button -->
+        <button
+          id="sso-btn"
+          class="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-xl bg-white text-gray-800 font-semibold text-sm hover:bg-gray-50 active:scale-[0.98] transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          <span id="sso-label">Google Workspace でサインイン</span>
+        </button>
 
         <p class="text-[11px] text-slate-600 text-center mt-6 leading-relaxed">
           アクセス権の付与は組織の管理者に<br/>お問い合わせください
@@ -83,4 +57,143 @@ import Layout from '../layouts/Layout.astro';
       </div>
     </div>
   </div>
+
+  <script>
+    const IDP_SSO_URL   = 'https://accounts.google.com/o/saml2/idp?idpid=C04eaya5d';
+    const SP_ENTITY_ID  = 'https://manage.yamada-lab.co.jp';
+    const ACS_URL       = 'https://manage.yamada-lab.co.jp/auth/callback/';
+
+    // ── Service worker registration ────────────────────────────────────────
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(console.error);
+    }
+
+    // ── Error display ──────────────────────────────────────────────────────
+    const errorMsgs = {
+      auth_failed:        '認証に失敗しました。もう一度お試しください。',
+      wrong_issuer:       'IdP が一致しません。',
+      wrong_audience:     'SP Entity ID が一致しません。',
+      expired:            'SAMLレスポンスの有効期限が切れています。',
+      not_yet_valid:      'SAMLレスポンスがまだ有効期間前です。',
+      no_nameid:          'ユーザー情報を取得できませんでした。',
+      no_response:        'SAMLレスポンスが受信できませんでした。',
+      exception:          '予期しないエラーが発生しました。',
+      sw_unavailable:     'このブラウザはサポートされていません（Service Worker 必須）。',
+    };
+    const params = new URLSearchParams(window.location.search);
+    const errKey = params.get('error');
+    if (errKey) {
+      const el = document.getElementById('error-msg');
+      el.textContent = errorMsgs[errKey] ?? `エラー: ${errKey}`;
+      el.classList.remove('hidden');
+    }
+
+    // ── Already authenticated → redirect ──────────────────────────────────
+    async function checkExistingAuth() {
+      try {
+        const res  = await fetch('/auth/status');
+        const data = await res.json();
+        if (data.authenticated) {
+          window.location.replace(params.get('next') || '/dashboard/');
+        }
+      } catch {}
+    }
+    checkExistingAuth();
+
+    // ── SSO initiation ─────────────────────────────────────────────────────
+    document.getElementById('sso-btn').addEventListener('click', async () => {
+      if (!('serviceWorker' in navigator)) {
+        showError('sw_unavailable');
+        return;
+      }
+
+      setBtnState('loading');
+
+      try {
+        // Ensure SW is active before redirecting (so ACS POST is intercepted)
+        await navigator.serviceWorker.ready;
+
+        const { url, requestId } = await buildSSOUrl();
+
+        // Store request ID in localStorage for potential future validation
+        sessionStorage.setItem('saml_req_id', requestId);
+
+        window.location.href = url;
+
+      } catch (err) {
+        console.error('SSO initiation failed:', err);
+        setBtnState('idle');
+        showError('exception');
+      }
+    });
+
+    function setBtnState(state) {
+      const btn   = document.getElementById('sso-btn');
+      const label = document.getElementById('sso-label');
+      if (state === 'loading') {
+        btn.disabled   = true;
+        label.textContent = '接続中...';
+      } else {
+        btn.disabled   = false;
+        label.textContent = 'Google Workspace でサインイン';
+      }
+    }
+
+    function showError(key) {
+      const el = document.getElementById('error-msg');
+      el.textContent = errorMsgs[key] ?? `エラー: ${key}`;
+      el.classList.remove('hidden');
+    }
+
+    // ── SAMLRequest builder ────────────────────────────────────────────────
+    async function buildSSOUrl() {
+      const requestId    = '_' + crypto.randomUUID().replace(/-/g, '');
+      const issueInstant = new Date().toISOString();
+
+      const xml = [
+        `<samlp:AuthnRequest`,
+        ` xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"`,
+        ` xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"`,
+        ` ID="${requestId}"`,
+        ` Version="2.0"`,
+        ` IssueInstant="${issueInstant}"`,
+        ` Destination="${IDP_SSO_URL}"`,
+        ` AssertionConsumerServiceURL="${ACS_URL}"`,
+        ` ProtocolBinding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST">`,
+        `<saml:Issuer>${SP_ENTITY_ID}</saml:Issuer>`,
+        `<samlp:NameIDPolicy`,
+        ` Format="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress"`,
+        ` AllowCreate="true"/>`,
+        `</samlp:AuthnRequest>`,
+      ].join('');
+
+      const samlRequest = await deflateBase64(xml);
+      const qs = new URLSearchParams({ SAMLRequest: samlRequest, RelayState: requestId });
+      return { url: `${IDP_SSO_URL}?${qs}`, requestId };
+    }
+
+    async function deflateBase64(str) {
+      const bytes  = new TextEncoder().encode(str);
+      const cs     = new CompressionStream('deflate-raw');
+      const writer = cs.writable.getWriter();
+      const reader = cs.readable.getReader();
+
+      writer.write(bytes);
+      writer.close();
+
+      const chunks = [];
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+      }
+      let total = 0;
+      chunks.forEach(c => total += c.length);
+      const out = new Uint8Array(total);
+      let off = 0;
+      chunks.forEach(c => { out.set(c, off); off += c.length; });
+
+      return btoa(String.fromCharCode(...out));
+    }
+  </script>
 </Layout>
