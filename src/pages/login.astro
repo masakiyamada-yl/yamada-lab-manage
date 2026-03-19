@@ -36,20 +36,17 @@ import Layout from '../layouts/Layout.astro';
           GitHub Enterprise SSO (yamada-lab-llc) でサインイン
         </p>
 
-        <!-- Error notice -->
-        <div id="error-msg" class="hidden mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs text-center"></div>
-
         <!-- GitHub Enterprise SSO button -->
-        <button
-          id="sso-btn"
-          class="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-xl bg-[#24292f] text-white font-semibold text-sm hover:bg-[#2f363d] active:scale-[0.98] transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+        <a
+          href="https://yamada-lab-llc.ghe.com/enterprises/yamada-lab-llc/sso"
+          class="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-xl bg-[#24292f] text-white font-semibold text-sm hover:bg-[#2f363d] active:scale-[0.98] transition-all shadow-sm"
         >
           <!-- GitHub mark -->
           <svg width="20" height="20" viewBox="0 0 16 16" fill="white" aria-hidden="true">
             <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
           </svg>
-          <span id="sso-label">GitHub Enterprise でサインイン</span>
-        </button>
+          GitHub Enterprise でサインイン
+        </a>
 
         <!-- Enterprise info -->
         <div class="mt-4 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-[#0f1a30]/50 border border-[#1a2540]">
@@ -70,36 +67,14 @@ import Layout from '../layouts/Layout.astro';
   </div>
 
   <script>
-    const GITHUB_ENTERPRISE_HOST = 'https://yamada-lab-llc.ghe.com';
-    const GITHUB_CLIENT_ID       = 'REPLACE_WITH_OAUTH_APP_CLIENT_ID'; // ← OAuth App の Client ID
-    const CALLBACK_URL           = 'https://manage.yamada-lab.co.jp/auth/callback/';
-
-    // ── Service worker registration ────────────────────────────────────────
+    // Service Worker 登録
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(console.error);
     }
 
-    // ── Error messages ─────────────────────────────────────────────────────
-    const errorMsgs = {
-      no_code:              'GitHub から認証コードを受け取れませんでした。',
-      state_mismatch:       'セキュリティチェックに失敗しました。もう一度お試しください。',
-      token_exchange_failed:'トークン交換に失敗しました。',
-      user_fetch_failed:    'ユーザー情報の取得に失敗しました。',
-      not_org_member:       'この組織のメンバーではありません。管理者にお問い合わせください。',
-      exception:            '予期しないエラーが発生しました。',
-      sw_unavailable:       'このブラウザはサポートされていません（Service Worker が必要です）。',
-    };
-
-    const params = new URLSearchParams(window.location.search);
-    const errKey = params.get('error');
-    if (errKey) {
-      const el = document.getElementById('error-msg');
-      el.textContent = errorMsgs[errKey] ?? `エラー: ${errKey}`;
-      el.classList.remove('hidden');
-    }
-
-    // ── Already authenticated → redirect ──────────────────────────────────
+    // 既にセッションがあればダッシュボードへ
     (async () => {
+      const params = new URLSearchParams(window.location.search);
       try {
         const res  = await fetch('/auth/status');
         const data = await res.json();
@@ -108,57 +83,5 @@ import Layout from '../layouts/Layout.astro';
         }
       } catch {}
     })();
-
-    // ── GitHub Enterprise OAuth initiation ─────────────────────────────────
-    document.getElementById('sso-btn').addEventListener('click', async () => {
-      if (!('serviceWorker' in navigator)) {
-        showError('sw_unavailable');
-        return;
-      }
-
-      setBtnState('loading');
-
-      try {
-        const sw = await navigator.serviceWorker.ready;
-
-        // Generate state for CSRF protection
-        const state = crypto.randomUUID();
-
-        // Save state in SW's IndexedDB via message
-        await new Promise((resolve, reject) => {
-          const channel = new MessageChannel();
-          channel.port1.onmessage = e => (e.data?.ok ? resolve() : reject());
-          sw.active.postMessage({ type: 'SAVE_STATE', state }, [channel.port2]);
-          setTimeout(reject, 3000);
-        });
-
-        // Build GitHub Enterprise OAuth URL
-        const authUrl = new URL(`${GITHUB_ENTERPRISE_HOST}/login/oauth/authorize`);
-        authUrl.searchParams.set('client_id',    GITHUB_CLIENT_ID);
-        authUrl.searchParams.set('redirect_uri',  CALLBACK_URL);
-        authUrl.searchParams.set('scope',         'read:org read:user user:email');
-        authUrl.searchParams.set('state',          state);
-
-        window.location.href = authUrl.toString();
-
-      } catch (err) {
-        console.error('SSO initiation failed:', err);
-        setBtnState('idle');
-        showError('exception');
-      }
-    });
-
-    function setBtnState(state) {
-      const btn   = document.getElementById('sso-btn');
-      const label = document.getElementById('sso-label');
-      btn.disabled      = state === 'loading';
-      label.textContent = state === 'loading' ? '接続中...' : 'GitHub Enterprise でサインイン';
-    }
-
-    function showError(key) {
-      const el = document.getElementById('error-msg');
-      el.textContent = errorMsgs[key] ?? `エラー: ${key}`;
-      el.classList.remove('hidden');
-    }
   </script>
 </Layout>
