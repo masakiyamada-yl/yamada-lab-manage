@@ -38,7 +38,7 @@ import Layout from '../layouts/Layout.astro';
 
         <!-- GitHub Enterprise SSO button -->
         <a
-          href="https://yamada-lab-llc.ghe.com/enterprises/yamada-lab-llc/sso"
+          href="https://yamada-lab-llc.ghe.com/login/oauth/authorize?client_id=Ov23fhwOQWC2WnYa1pc6&redirect_uri=https://manage.yamada-lab.co.jp/auth/callback&scope=read:org"
           class="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-xl bg-[#24292f] text-white font-semibold text-sm hover:bg-[#2f363d] active:scale-[0.98] transition-all shadow-sm"
         >
           <!-- GitHub mark -->
@@ -55,7 +55,7 @@ import Layout from '../layouts/Layout.astro';
           </svg>
           <div>
             <div class="text-[11px] text-slate-400 font-medium">yamada-lab-llc.ghe.com</div>
-            <div class="text-[10px] text-slate-600">Google Workspace SAML でSSO認証</div>
+            <div class="text-[10px] text-slate-600">GitHub OAuth 2.0 認証</div>
           </div>
         </div>
 
