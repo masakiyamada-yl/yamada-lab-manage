@@ -1,17 +1,12 @@
 ---
-// Entry point – SW が CF セッションを確認してリダイレクト
+// ルートは /dashboard/ へリダイレクト（CF Access が認証を処理）
 ---
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
-  }
-  (async () => {
-    try {
-      const res  = await fetch('/auth/status');
-      const data = await res.json();
-      window.location.replace(data.authenticated ? '/dashboard/' : '/login/');
-    } catch {
-      window.location.replace('/login/');
-    }
-  })();
-</script>
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="refresh" content="0;url=/dashboard/" />
+    <title>リダイレクト中...</title>
+  </head>
+  <body></body>
+</html>
