@@ -1,95 +1,71 @@
 // YAMADA LAB ANP Portal – Service Worker
-// Auth: GitHub Enterprise Cloud OAuth SSO
+// Auth: Cloudflare Access JWT (Google Workspace SSO)
 
 const PROTECTED_PATHS = [
   '/dashboard', '/analytics', '/radius', '/radius-udp',
   '/certificates', '/logs', '/issue',
 ];
-const TOKEN_PROXY = 'https://github-oauth-proxy.masaki-yamada.workers.dev';
-const GHE_API     = 'https://yamada-lab-llc.ghe.com/api/v3';
-const ORG_NAME    = 'yamada-lab-llc';
 const SESSION_TTL = 8 * 60 * 60 * 1000; // 8h
 
-// ── Lifecycle ────────────────────────────────────────────────────────────────
 self.addEventListener('install',  () => self.skipWaiting());
 self.addEventListener('activate', e  => e.waitUntil(clients.claim()));
 
-// ── Fetch interception ───────────────────────────────────────────────────────
 self.addEventListener('fetch', event => {
   const url  = new URL(event.request.url);
   const path = url.pathname.replace(/\/$/, '') || '/';
 
-  // OAuth callback: 認可コードをトークンに交換してセッション保存
-  if (path === '/auth/callback' && url.searchParams.has('code')) {
-    event.respondWith(handleOAuthCallback(url));
-    return;
-  }
+  if (path === '/auth/logout') { event.respondWith(handleLogout()); return; }
+  if (path === '/auth/status') { event.respondWith(handleAuthStatus()); return; }
 
-  // Logout: セッションをクリアして /login/ へ
-  if (path === '/auth/logout') {
-    event.respondWith(handleLogout());
-    return;
-  }
-
-  // Auth status JSON API（ページ側から呼び出し）
-  if (path === '/auth/status') {
-    event.respondWith(handleAuthStatus());
-    return;
-  }
-
-  // 保護ルートのガード
   const isProtected = PROTECTED_PATHS.some(p => path === p || path.startsWith(p + '/'));
   if (isProtected && event.request.mode === 'navigate') {
     event.respondWith(guardedFetch(event.request, url));
-    return;
   }
 });
 
-// ── OAuth callback handler ────────────────────────────────────────────────────
-async function handleOAuthCallback(url) {
-  const code  = url.searchParams.get('code');
-  const error = url.searchParams.get('error');
-  if (error) return Response.redirect('/login/?error=' + encodeURIComponent(error), 302);
-  try {
-    // 1. Cloudflare Worker でコード→アクセストークン交換
-    const tokenRes = await fetch(TOKEN_PROXY, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code }),
-    });
-    if (!tokenRes.ok) throw new Error('token_exchange_failed');
-    const { access_token } = await tokenRes.json();
-    if (!access_token) throw new Error('no_access_token');
-
-    // 2. ユーザー情報を取得
-    const userRes = await fetch(GHE_API + '/user', {
-      headers: { Authorization: 'token ' + access_token, Accept: 'application/vnd.github+json' },
-    });
-    if (!userRes.ok) throw new Error('user_fetch_failed');
-    const user = await userRes.json();
-
-    // 3. 組織メンバーシップを確認
-    const memberRes = await fetch(GHE_API + '/orgs/' + ORG_NAME + '/members/' + user.login, {
-      headers: { Authorization: 'token ' + access_token, Accept: 'application/vnd.github+json' },
-    });
-    if (memberRes.status !== 204) throw new Error('not_org_member');
-
-    // 4. セッション保存してダッシュボードへ
-    const email = user.email || user.login + '@yamada-lab.co.jp';
-    await storeSession({ email, login: user.login, expiry: Date.now() + SESSION_TTL });
-    return Response.redirect('/dashboard/', 302);
-  } catch (e) {
-    return Response.redirect('/login/?error=' + encodeURIComponent(e.message), 302);
-  }
-}
-
 // ── Auth guard ────────────────────────────────────────────────────────────────
 async function guardedFetch(request, url) {
+  // Cloudflare Access JWT からセッションを同期
+  await syncSessionFromCF(request);
+
   const session = await getSession();
   if (!session) {
     return Response.redirect('/login/?next=' + encodeURIComponent(url.pathname), 302);
   }
   return fetch(request);
+}
+
+// CF_Authorization クッキー（Cloudflare Access JWT）を読んでセッション作成
+async function syncSessionFromCF(request) {
+  const existing = await getSession();
+  if (existing) return;
+
+  const cookieHeader = request.headers.get('Cookie') || '';
+  const cfToken = extractCookie(cookieHeader, 'CF_Authorization');
+  if (!cfToken) return;
+
+  try {
+    const payload = decodeJWTPayload(cfToken);
+    if (!payload.email) return;
+    if (payload.exp && payload.exp * 1000 < Date.now()) return;
+
+    await storeSession({
+      email:  payload.email,
+      login:  payload.email.split('@')[0],
+      expiry: payload.exp ? payload.exp * 1000 : Date.now() + SESSION_TTL,
+    });
+  } catch { /* JWT decode failure – skip */ }
+}
+
+function extractCookie(cookieStr, name) {
+  const m = cookieStr.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]+)'));
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
+function decodeJWTPayload(token) {
+  const b64 = token.split('.')[1];
+  if (!b64) throw new Error('invalid_jwt');
+  return JSON.parse(atob(b64.replace(/-/g, '+').replace(/_/g, '/')));
 }
 
 async function handleLogout() {
@@ -107,7 +83,6 @@ async function handleAuthStatus() {
   });
 }
 
-// ── SW message handler（ページからのセッション保存）────────────────────────
 self.addEventListener('message', async event => {
   if (event.data?.type === 'SET_SESSION') {
     await storeSession(event.data.session);
