@@ -1,6 +1,6 @@
 ---
-// Logout: Service Worker clears the session and redirects to /login/.
-// This page is the navigation target; SW intercepts it at /auth/logout.
+// ログアウト: SW が /cdn-cgi/access/logout にリダイレクト
+// SW が無効の場合のフォールバック
 import Layout from '../../layouts/Layout.astro';
 ---
 
@@ -12,7 +12,6 @@ import Layout from '../../layouts/Layout.astro';
     </div>
   </div>
   <script>
-    // Fallback if SW is not active
-    window.location.replace('/login/');
+    window.location.replace("/cdn-cgi/access/logout");
   </script>
 </Layout>
