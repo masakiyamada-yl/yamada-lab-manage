@@ -19,19 +19,17 @@ self.addEventListener('fetch', event => {
 
   const isProtected = PROTECTED_PATHS.some(p => path === p || path.startsWith(p + '/'));
   if (isProtected && event.request.mode === 'navigate') {
-    event.respondWith(guardedFetch(event.request, url));
+    event.respondWith(guardedFetch(event.request));
   }
 });
 
 // ── Auth guard ────────────────────────────────────────────────────────────────
-async function guardedFetch(request, url) {
-  // Cloudflare Access JWT からセッションを同期
+async function guardedFetch(request) {
+  // CF_Authorization クッキーがあればセッション同期
   await syncSessionFromCF(request);
 
-  const session = await getSession();
-  if (!session) {
-    return Response.redirect('/login/?next=' + encodeURIComponent(url.pathname), 302);
-  }
+  // セッションがあればそのままフェッチ（Cloudflare Access が edge で認証済み）
+  // セッションがなくても fetch を通す → Cloudflare Access が Google 認証にリダイレクト
   return fetch(request);
 }
 
