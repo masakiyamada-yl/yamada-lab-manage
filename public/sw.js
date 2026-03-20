@@ -15,7 +15,7 @@ self.addEventListener('fetch', event => {
   const path = url.pathname.replace(/\/$/, '') || '/';
 
   if (path === '/auth/logout') { event.respondWith(handleLogout()); return; }
-  if (path === '/auth/status') { event.respondWith(handleAuthStatus()); return; }
+  if (path === '/auth/status') { event.respondWith(handleAuthStatus(event.request)); return; }
 
   const isProtected = PROTECTED_PATHS.some(p => path === p || path.startsWith(p + '/'));
   if (isProtected && event.request.mode === 'navigate') {
@@ -71,7 +71,9 @@ async function handleLogout() {
   return Response.redirect('/login/', 302);
 }
 
-async function handleAuthStatus() {
+async function handleAuthStatus(request) {
+  // fetchリクエストのCookieヘッダーからCFセッションを自動同期
+  await syncSessionFromCF(request);
   const s = await getSession();
   const body = s
     ? JSON.stringify({ authenticated: true,  email: s.email })
