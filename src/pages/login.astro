@@ -53,7 +53,7 @@ import Layout from '../layouts/Layout.astro';
           <button
             type="submit"
             id="submit-btn"
-            class="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-blue-600 text-white font-semibold text-sm hover:bg-blue-500 active:scale-[0.98] transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-blue-600 text-white font-semibold text-sm hover:bg-blue-500 active:scale-[0.98] transition-all shadow-sm disabled:opacity-50"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
@@ -70,43 +70,44 @@ import Layout from '../layouts/Layout.astro';
   </div>
 
   <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
+    // CF_Authorization cookie を document.cookie から読んでJWTデコード
+    function getCFSession() {
+      const m = document.cookie.match(/(?:^|;\s*)CF_Authorization=([^;]+)/);
+      if (!m) return null;
+      try {
+        const b64 = m[1].split('.')[1];
+        const payload = JSON.parse(atob(b64.replace(/-/g, '+').replace(/_/g, '/')));
+        if (payload.exp && payload.exp * 1000 < Date.now()) return null;
+        return payload;
+      } catch { return null; }
     }
 
-    // 既に認証済みならダッシュボードへ
-    (async () => {
-      const params = new URLSearchParams(window.location.search);
-      try {
-        const res  = await fetch('/auth/status');
-        const data = await res.json();
-        if (data.authenticated) {
-          window.location.replace(params.get('next') || '/dashboard/');
-        }
-      } catch {}
-    })();
+    // 既に CF 認証済みならダッシュボードへ
+    const params = new URLSearchParams(window.location.search);
+    const next   = params.get('next') || '/dashboard/';
+    const session = getCFSession();
+    if (session) {
+      window.location.replace(next);
+    }
 
-    // フォーム送信: CF Access ログインへリダイレクト
-    document.getElementById('login-form').addEventListener('submit', (e) => {
+    // フォーム送信: /dashboard/ へ（CF Access が認証フローを処理）
+    document.getElementById('login-form')?.addEventListener('submit', (e) => {
       e.preventDefault();
-      const email     = (document.getElementById('email-input') as HTMLInputElement).value.trim();
-      const errorEl   = document.getElementById('email-error');
-      const submitBtn = document.getElementById('submit-btn');
+      const emailEl = document.getElementById('email-input') as HTMLInputElement;
+      const errorEl = document.getElementById('email-error');
+      const email   = emailEl?.value.trim() ?? '';
 
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         errorEl?.classList.remove('hidden');
         return;
       }
       errorEl?.classList.add('hidden');
-      submitBtn?.setAttribute('disabled', 'true');
+      document.getElementById('submit-btn')?.setAttribute('disabled', 'true');
 
-      const params      = new URLSearchParams(window.location.search);
-      const redirectUrl = encodeURIComponent(params.get('next') || '/dashboard/');
-      window.location.href =
-        `/cdn-cgi/access/login?redirect_url=${redirectUrl}&login_hint=${encodeURIComponent(email)}`;
+      // CF Access が認証を処理してダッシュボードへリダイレクト
+      window.location.href = '/dashboard/';
     });
 
-    // 入力中はエラーを非表示
     document.getElementById('email-input')?.addEventListener('input', () => {
       document.getElementById('email-error')?.classList.add('hidden');
     });
