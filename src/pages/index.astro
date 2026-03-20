@@ -1,4 +1,17 @@
 ---
-// Redirect to /login
+// Entry point – SW が CF セッションを確認してリダイレクト
 ---
-<meta http-equiv="refresh" content="0;url=/login" />
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
+  }
+  (async () => {
+    try {
+      const res  = await fetch('/auth/status');
+      const data = await res.json();
+      window.location.replace(data.authenticated ? '/dashboard/' : '/login/');
+    } catch {
+      window.location.replace('/login/');
+    }
+  })();
+</script>
